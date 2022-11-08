@@ -96,7 +96,7 @@ const removeSessions = (uuid) => {
 }
 
 app.ws('/', (ws, req) => {
-    const userData = getUserDataFromSID(req.cookies.sid);
+    const userData = getUserDataFromSID(req.cookies);
     console.log(req.cookies.sid);
     console.log(`user ${userData.username} connected`);
 
