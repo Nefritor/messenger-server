@@ -23,7 +23,7 @@ const login = (data, ws, req) => {
 const updateMessagesList = (message) => {
     messages.push(message);
     wss.clients.forEach((client) => {
-        client.send(JSON.stringify([message]));
+        client.send(JSON.stringify({type: 'message', data: [message]}));
     })
 }
 
@@ -84,7 +84,7 @@ const getUserDataFromSID = (sid) => {
 
 app.ws('/', (ws, req) => {
     console.log('new websocket connection');
-    ws.send(JSON.stringify(messages));
+    ws.send(JSON.stringify({type: 'connection', messages}));
     ws.on('message', (msg) => {
         const data = JSON.parse(msg);
         console.log(data);
