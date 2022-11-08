@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import WSExpress from 'express-ws';
+import cookieParser from 'cookie-parser';
 import {v4 as createUUID} from 'uuid';
 import {createHash} from 'crypto';
 import cors from 'cors';
@@ -10,16 +11,12 @@ const app = express();
 const wss = WSExpress(app).getWss();
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 
-const sessions = [];
+let sessions = [];
 const users = [];
 const messages = [];
 
-const login = (data, ws, req) => {
-    console.log(`Login event: ${data}`);
-
-    ws.send('login successful');
-}
 const updateMessagesList = (message) => {
     messages.push(message);
     wss.clients.forEach((client) => {
@@ -82,19 +79,54 @@ const getUserDataFromSID = (sid) => {
     return false;
 }
 
+const checkSession = (ws, uuid) => {
+    const session = getSession(uuid);
+    if (session) {
+        ws.send(JSON.stringify({type: 'connection', messages}));
+    } else {
+        ws.close(3000, 'Сессия была завершена');
+    }
+}
+
+const removeSessions = (uuid) => {
+    sessions = sessions.filter((session) => session.uuid !== uuid);
+}
+
 app.ws('/', (ws, req) => {
-    console.log('new websocket connection');
-    ws.send(JSON.stringify({type: 'connection', messages}));
+    const userData = getUserDataFromSID(req.cookies.sid);
+    console.log(`user ${userData.username} connected`);
+
+    updateMessagesList({
+        uuid: userData.uuid,
+        date: new Date().getTime(),
+        event: 'connection'
+    });
+    checkSession(ws, userData.uuid);
+
     ws.on('message', (msg) => {
         const data = JSON.parse(msg);
-        console.log(data);
         switch (data.type) {
             case 'message':
                 if (data.data.text) {
-                    return updateMessagesList(data.data, ws, req);
+                    updateMessagesList(data.data);
                 }
+                break;
         }
-    })
+    });
+
+    ws.on('close', (code) => {
+        console.log(`user ${userData.username} disconnected`);
+        updateMessagesList({
+            uuid: userData.uuid,
+            date: new Date().getTime(),
+            event: 'disconnection'
+        });
+        switch (code) {
+            case 3000:
+                removeSessions(userData.uuid);
+                break;
+        }
+    });
 })
 
 app.get('/get-users', (req, res) => {
@@ -111,7 +143,12 @@ app.post('/signup', (req, res) => {
         return res.sendStatus(400);
     }
     if (!getUserDataFromName(username)) {
-        res.end(JSON.stringify({type: 'success', message: 'Успешно зарегестрирован', sid: register(username, password)}));
+        console.log(`user ${username} registered`);
+        res.end(JSON.stringify({
+            type: 'success',
+            message: 'Успешно зарегестрирован',
+            sid: register(username, password)
+        }));
     } else {
         res.end(JSON.stringify({type: 'error', message: 'Пользователь уже зарегестрирован'}));
     }

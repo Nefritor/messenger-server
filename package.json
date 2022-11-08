@@ -1,11 +1,14 @@
 {
-  "name": "MessagerServer",
+  "name": "messager-server",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon"
+    "start": "node index.js",
+    "debug": "node debug index.js",
+    "develop": "nodemon"
   },
   "type": "module",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.0.3",
