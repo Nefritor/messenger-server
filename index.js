@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import WSExpress from 'express-ws';
-import cookieParser from 'cookie-parser';
 import {v4 as createUUID} from 'uuid';
 import {createHash} from 'crypto';
 import cors from 'cors';
@@ -11,7 +10,6 @@ const app = express();
 const wss = WSExpress(app).getWss();
 app.use(express.json());
 app.use(cors());
-app.use(cookieParser());
 
 let sessions = [];
 const users = [];
@@ -92,10 +90,8 @@ const removeSessions = (uuid) => {
     sessions = sessions.filter((session) => session.uuid !== uuid);
 }
 
-app.ws('/', (ws, req) => {
-    console.log('cookies', req.cookies);
-    console.log('headers', req.headers);
-    const userData = getUserDataFromSID(req.cookies.sid);
+app.ws('/:sid', (ws, req) => {
+    const userData = getUserDataFromSID(req.params.sid);
     console.log(`user ${userData.username} connected`);
 
     updateMessagesList({
