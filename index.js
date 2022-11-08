@@ -56,6 +56,7 @@ const updateSession = (uuid) => {
 }
 
 const getSession = (uuid) => {
+    console.log('SESSIONS:', sessions)
     return sessions.find((session) => session.uuid === uuid);
 }
 
@@ -80,7 +81,9 @@ const getUserDataFromSID = (sid) => {
 }
 
 const checkSession = (ws, uuid) => {
+    console.log('checkSession:UUID', uuid);
     const session = getSession(uuid);
+    console.log('checkSession:SESSION', session);
     if (session) {
         ws.send(JSON.stringify({type: 'connection', messages}));
     } else {
