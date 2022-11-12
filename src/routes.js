@@ -1,5 +1,5 @@
 import {getMessageList} from '../models/messages.js';
-import {getUserByName, getUserByUUID, getUsers, hasUser, register} from '../models/users.js';
+import {getUserByName, getUserByUUID, getUsers, hasUserByName, register} from '../models/users.js';
 import {hashText} from './utils.js';
 
 const routes = [{
@@ -18,12 +18,12 @@ const routes = [{
     type: 'post',
     url: '/signup',
     callback: ({data, send, sendStatus}) => {
-        const {username, password} = data;
+        const {username, password, type} = data;
         if (!username || !password) {
             return sendStatus(400);
         }
-        if (!hasUser(username)) {
-            send(register({username, password}));
+        if (!hasUserByName(username)) {
+            send(register({username, password, type}));
         } else {
             send({type: 'error', message: 'Пользователь уже зарегестрирован'});
         }
