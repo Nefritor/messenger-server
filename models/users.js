@@ -5,7 +5,6 @@ import {getTime, hashText, sendEachClient} from '../src/utils.js';
 const users = [];
 
 const initOnlineCheck = (wss, timeout = 60) => {
-    console.log('online check event');
     _checkOnline(wss);
     setTimeout(() => {
         initOnlineCheck(wss, timeout);
