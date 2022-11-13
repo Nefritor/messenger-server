@@ -13,7 +13,7 @@ const _addMessage = (message) => {
 
 const broadcastMessage = (wss, message) => {
     _addMessage(message);
-    sendEachClient(wss, [_fillUserData(message)]);
+    sendEachClient(wss, 'message', [_fillUserData(message)]);
 }
 
 const _fillUserData = (message) => {

@@ -1,5 +1,11 @@
 import {getMessageList} from '../models/messages.js';
-import {getUserByName, getUserByUUID, getUsers, hasUserByName, register} from '../models/users.js';
+import {
+    getUserByName,
+    getUserByUUID,
+    getUserData, getUsers,
+    hasUserByName,
+    register
+} from '../models/users.js';
 import {hashText} from './utils.js';
 
 const routes = [{
@@ -53,7 +59,7 @@ const routes = [{
         }
         const user = getUserByUUID(uuid);
         if (user) {
-            send({type: 'success', userData: user});
+            send({type: 'success', userData: getUserData(user)});
         } else {
             send({type: 'error', message: 'Пользователь не найден'});
         }

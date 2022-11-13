@@ -1,8 +1,37 @@
 import {v4 as createUUID} from 'uuid';
 
-import {hashText} from '../src/utils.js';
+import {getTime, hashText, sendEachClient} from '../src/utils.js';
 
 const users = [];
+
+const initOnlineCheck = (wss, timeout = 60) => {
+    console.log('online check event');
+    _checkOnline(wss);
+    setTimeout(() => {
+        initOnlineCheck(wss, timeout);
+    }, timeout * 1000);
+}
+
+const _checkOnline = (wss) => {
+    const online = [];
+    wss.clients.forEach((client) => {
+        online.push(client.uuid);
+    });
+    let listChanged = false;
+    users.forEach((user) => {
+        const isOnline = online.includes(user.uuid);
+        if (isOnline && !user.online) {
+            setOnline(user);
+            listChanged = true;
+        } else if (!isOnline && user.online) {
+            setOffline(user);
+            listChanged = true;
+        }
+    })
+    if (listChanged) {
+        broadcastOnline(wss);
+    }
+}
 
 const addUser = (user) => {
     users.push(user);
@@ -16,6 +45,15 @@ const createUser = ({username, password, type}) => {
         password: hashText(password),
         type: getUserType(type)
     }
+}
+
+const setOnline = (user) => {
+    user.online = true;
+    user.lastOnline = getTime();
+}
+
+const setOffline = (user) => {
+    user.online = false;
 }
 
 const getUserType = (type) => {
@@ -38,7 +76,7 @@ const register = ({username, password, type}) => {
 }
 
 const getUsers = () => {
-    return users;
+    return users.map((user) => getUserData(user));
 }
 
 const getUserByName = (username) => {
@@ -47,6 +85,20 @@ const getUserByName = (username) => {
 
 const getUserByUUID = (uuid) => {
     return users.find((user) => user.uuid === uuid);
+}
+
+const getUserData = (user) => {
+    return {
+        uuid: user.uuid,
+        username: user.username,
+        type: user.type,
+        online: user.online,
+        lastOnline: user.lastOnline
+    }
+}
+
+const broadcastOnline = (wss) => {
+    sendEachClient(wss, 'online', getUsers());
 }
 
 const hasUser = (uuid) => {
@@ -62,8 +114,13 @@ export {
     createUser,
     register,
     getUsers,
+    broadcastOnline,
+    getUserData,
     getUserByName,
     getUserByUUID,
     hasUser,
-    hasUserByName
+    hasUserByName,
+    initOnlineCheck,
+    setOnline,
+    setOffline
 }

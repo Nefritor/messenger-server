@@ -15,9 +15,9 @@ const closeClients = (wss, uuid, code, message) => {
     return hasConnection;
 }
 
-const sendEachClient = (wss, data) => {
+const sendEachClient = (wss, type, data) => {
     wss.clients.forEach((client) => {
-        client.send(JSON.stringify({type: 'message', data}));
+        client.send(JSON.stringify({type, data}));
     })
 }
 
